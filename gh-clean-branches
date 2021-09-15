@@ -5,13 +5,17 @@
 # run inside a git repo folder
 
 DRY_RUN=false
+FORCE=false
 if [ $# -gt 0 ]; then
   case "$1" in
     --dry-run )
       DRY_RUN=true
       ;;
+    --force)
+      FORCE=true
+      ;;
     * )
-      printf "%s\n" "Usage: gh clean-branches [--dry-run]"
+      printf "%s\n" "Usage: gh clean-branches [--dry-run] [--force]"
       exit 1
       ;;
   esac
@@ -75,10 +79,13 @@ else
     if [[ ${DRY_RUN} == false ]]; then
       for branch in "${missing_upstream_branches[@]}"; do
           printf "%s\n" "${green}Deleting branch:${end}     ${branch}"
-          git branch -d "${branch}"
+          [[ $FORCE = true ]] && flag="-D" || flag="-d"
+          git branch ${flag} "${branch}"
           if [[ $? -eq 1 ]]; then
             printf "%s\n" "❌  ${red}Could not delete${end} ${branch}"
-            printf "%s\n" "${yellow}Try manually:${end} git branch -D ${branch}"
+            if [[ ${FORCE} == false ]]; then
+              printf "%s\n" "${yellow}Try manually:${end} git branch -D ${branch}"
+            fi
           fi
       done
     else
